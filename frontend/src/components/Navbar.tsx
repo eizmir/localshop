@@ -25,6 +25,11 @@ export function Navbar() {
           </>
         )}
         {user?.role === 'seller' && <NavLink to="/seller">{t.nav.sellerPanel}</NavLink>}
+        {user && (
+          <NavLink to="/settings" className="nav-icon" title={t.nav.settings} aria-label={t.nav.settings}>
+            ⚙
+          </NavLink>
+        )}
         {user ? (
           <button
             className="btn btn-ghost"

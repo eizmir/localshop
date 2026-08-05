@@ -3,6 +3,7 @@ import jwt, { SignOptions } from 'jsonwebtoken';
 import { env } from '../config/env';
 import { ApiError } from '../middleware/errorHandler';
 import { User, UserDoc } from '../models/User';
+import { toPublicAddress } from './addressService';
 import type { LoginInput, RegisterInput } from '../validators/auth';
 
 export function toPublicUser(user: UserDoc) {
@@ -12,7 +13,7 @@ export function toPublicUser(user: UserDoc) {
     email: user.email,
     role: user.role,
     phone: user.phone,
-    address: user.address,
+    addresses: user.addresses.map(toPublicAddress),
     createdAt: user.createdAt,
   };
 }
@@ -26,7 +27,11 @@ function signToken(user: UserDoc): string {
 export async function register(input: RegisterInput) {
   const existing = await User.findOne({ email: input.email });
   if (existing) throw new ApiError(409, msg.emailTaken);
-  const user = await User.create(input);
+  const { address, ...rest } = input;
+  const user = await User.create({
+    ...rest,
+    addresses: address ? [{ title: msg.defaultAddressTitle, text: address }] : [],
+  });
   return { token: signToken(user), user: toPublicUser(user) };
 }
 

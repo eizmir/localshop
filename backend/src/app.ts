@@ -3,6 +3,7 @@ import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { env } from './config/env';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
+import { addressesRouter } from './routes/addresses';
 import { authRouter } from './routes/auth';
 import { cartRouter } from './routes/cart';
 import { ordersRouter } from './routes/orders';
@@ -37,6 +38,7 @@ export function createApp(): express.Express {
   });
 
   app.use('/api/auth', authRouter);
+  app.use('/api/addresses', addressesRouter);
   app.use('/api/products', productsRouter);
   app.use('/api/sellers', sellersRouter);
   app.use('/api/cart', cartRouter);

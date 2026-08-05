@@ -2,13 +2,19 @@ import type { Category } from './constants/categories';
 
 export type Role = 'customer' | 'seller';
 
+export interface Address {
+  id: string;
+  title: string;
+  text: string;
+}
+
 export interface User {
   id: string;
   name: string;
   email: string;
   role: Role;
-  phone?: string;
-  address?: string;
+  phone: string;
+  addresses: Address[];
   createdAt: string;
 }
 
@@ -75,6 +81,7 @@ export interface OrderItem {
 export interface Order {
   id: string;
   items: OrderItem[];
+  address?: Omit<Address, 'id'>;
   totalPrice: number;
   status: OrderStatus;
   createdAt: string;
@@ -84,6 +91,7 @@ export interface SellerOrder {
   id: string;
   status: OrderStatus;
   createdAt: string;
+  address?: Omit<Address, 'id'>;
   items: OrderItem[];
   sellerTotal: number;
 }

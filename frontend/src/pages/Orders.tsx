@@ -49,6 +49,11 @@ export function Orders() {
                   </li>
                 ))}
               </ul>
+              {order.address && (
+                <p className="muted">
+                  {t.orders.deliveryTo(order.address.title, order.address.text)}
+                </p>
+              )}
               <strong>{t.orders.total(order.totalPrice.toLocaleString('tr-TR'))}</strong>
             </div>
           ))}

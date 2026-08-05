@@ -5,10 +5,7 @@ export const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(8).max(72),
   role: z.enum(['customer', 'seller']),
-  phone: z
-    .string()
-    .regex(/^[0-9+() -]{10,20}$/, 'Geçersiz telefon numarası')
-    .optional(),
+  phone: z.string().regex(/^[0-9+() -]{10,20}$/, 'Geçersiz telefon numarası'),
   address: z.string().min(5).max(300).optional(),
 });
 

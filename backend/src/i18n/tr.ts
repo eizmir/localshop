@@ -18,12 +18,18 @@ export const tr = {
   insufficientStockAdd: (max: number) => `Yetersiz stok: en fazla ${max} adet eklenebilir`,
   insufficientStockSet: (max: number) => `Yetersiz stok: en fazla ${max} adet seçilebilir`,
 
+  addressNotFound: 'Adres bulunamadı',
+  addressRequired: 'Sipariş için bir teslimat adresi seçmelisiniz',
+  defaultAddressTitle: 'Adresim',
+
   cartEmpty: 'Sepetiniz boş',
   productGone: 'Sepetteki bir ürün artık satışta değil',
   insufficientStockOrder: (name: string, left: number) =>
     `"${name}" için yeterli stok yok (kalan: ${left})`,
   orderNotFound: 'Sipariş bulunamadı',
   orderForbidden: 'Bu sipariş size ait değil',
+  orderNotForSeller: 'Bu siparişte size ait ürün yok',
+  invalidStatusTransition: 'Sipariş bu durumdayken bu değişiklik yapılamaz',
 
   alreadyPaid: 'Bu sipariş zaten ödenmiş',
   outOfStock: (name: string) => `"${name}" için stok kalmadı, ödeme yapılamaz`,

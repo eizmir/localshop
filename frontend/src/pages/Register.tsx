@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { errorMessage } from '../api/client';
@@ -14,15 +14,24 @@ export function Register() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [phone, setPhone] = useState('');
   const [address, setAddress] = useState('');
   const [role, setRole] = useState<Role>('customer');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  const passwordConfirmRef = useRef<HTMLInputElement>(null);
+  const passwordMismatch = passwordConfirm !== '' && password !== passwordConfirm;
+  const isSeller = role === 'seller';
+
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+    if (password !== passwordConfirm) {
+      passwordConfirmRef.current?.focus();
+      return;
+    }
     setLoading(true);
     try {
       const auth = await authApi.register({
@@ -30,7 +39,7 @@ export function Register() {
         email,
         password,
         role,
-        phone: phone || undefined,
+        phone,
         address: address || undefined,
       });
       signIn(auth);
@@ -48,14 +57,21 @@ export function Register() {
       <ErrorMessage message={error} />
       <form className="form" onSubmit={onSubmit}>
         <div className="field">
-          <label htmlFor="name">{t.register.name}</label>
+          <label htmlFor="role">{t.register.accountType}</label>
+          <select id="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+            <option value="customer">{t.register.customerOption}</option>
+            <option value="seller">{t.register.sellerOption}</option>
+          </select>
+        </div>
+        <div className="field">
+          <label htmlFor="name">{isSeller ? t.register.companyName : t.register.name}</label>
           <input
             id="name"
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
             minLength={2}
-            autoComplete="name"
+            autoComplete={isSeller ? 'organization' : 'name'}
           />
         </div>
         <div className="field">
@@ -82,12 +98,33 @@ export function Register() {
           />
         </div>
         <div className="field">
+          <label htmlFor="passwordConfirm">{t.register.passwordConfirm}</label>
+          <input
+            id="passwordConfirm"
+            ref={passwordConfirmRef}
+            type="password"
+            value={passwordConfirm}
+            onChange={(e) => setPasswordConfirm(e.target.value)}
+            required
+            minLength={8}
+            autoComplete="new-password"
+            aria-invalid={passwordMismatch}
+            aria-describedby={passwordMismatch ? 'passwordConfirm-error' : undefined}
+          />
+          {passwordMismatch && (
+            <p id="passwordConfirm-error" className="field-error">
+              {t.register.passwordMismatch}
+            </p>
+          )}
+        </div>
+        <div className="field">
           <label htmlFor="phone">{t.register.phone}</label>
           <input
             id="phone"
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            required
             placeholder="05xx xxx xx xx"
             autoComplete="tel"
           />
@@ -101,13 +138,6 @@ export function Register() {
             rows={2}
             autoComplete="street-address"
           />
-        </div>
-        <div className="field">
-          <label htmlFor="role">{t.register.accountType}</label>
-          <select id="role" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-            <option value="customer">{t.register.customerOption}</option>
-            <option value="seller">{t.register.sellerOption}</option>
-          </select>
         </div>
         <button className="btn btn-primary" disabled={loading}>
           {loading ? t.register.submitting : t.register.submit}

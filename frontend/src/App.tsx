@@ -2,6 +2,7 @@ import { Route, Routes } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { AddProduct } from './pages/AddProduct';
 import { CartPage } from './pages/CartPage';
+import { EditProduct } from './pages/EditProduct';
 import { Login } from './pages/Login';
 import { Orders } from './pages/Orders';
 import { Payment } from './pages/Payment';
@@ -9,6 +10,7 @@ import { ProductDetail } from './pages/ProductDetail';
 import { ProductList } from './pages/ProductList';
 import { Register } from './pages/Register';
 import { SellerDashboard } from './pages/SellerDashboard';
+import { Settings } from './pages/Settings';
 import { ProtectedRoute, RoleRoute } from './routes/guards';
 import { t } from './i18n';
 
@@ -47,6 +49,14 @@ export default function App() {
             }
           />
           <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/seller"
             element={
               <RoleRoute role="seller">
@@ -59,6 +69,14 @@ export default function App() {
             element={
               <RoleRoute role="seller">
                 <AddProduct />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="/seller/products/:id/edit"
+            element={
+              <RoleRoute role="seller">
+                <EditProduct />
               </RoleRoute>
             }
           />

@@ -17,9 +17,15 @@ export interface OrderItem {
   quantity: number;
 }
 
+export interface OrderAddress {
+  title: string;
+  text: string;
+}
+
 export interface OrderDoc extends Document {
   userId: Types.ObjectId;
   items: OrderItem[];
+  address?: OrderAddress;
   totalPrice: number;
   status: OrderStatus;
   createdAt: Date;
@@ -38,6 +44,14 @@ const orderSchema = new Schema<OrderDoc>(
         quantity: { type: Number, required: true, min: 1 },
       },
     ],
+    address: {
+      _id: false,
+      type: {
+        title: { type: String, required: true },
+        text: { type: String, required: true },
+      },
+      required: false,
+    },
     totalPrice: { type: Number, required: true, min: 0 },
     status: { type: String, enum: ORDER_STATUSES, default: 'PENDING_PAYMENT' },
   },

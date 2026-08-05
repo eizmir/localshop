@@ -1,17 +1,27 @@
 import bcrypt from 'bcryptjs';
-import { Document, model, Schema } from 'mongoose';
+import { Document, model, Schema, Types } from 'mongoose';
 import type { Role } from '../types/auth';
+
+export interface AddressDoc extends Types.Subdocument {
+  title: string;
+  text: string;
+}
 
 export interface UserDoc extends Document {
   name: string;
   email: string;
   password: string;
   role: Role;
-  phone?: string;
-  address?: string;
+  phone: string;
+  addresses: Types.DocumentArray<AddressDoc>;
   createdAt: Date;
   comparePassword(candidate: string): Promise<boolean>;
 }
+
+const addressSchema = new Schema<AddressDoc>({
+  title: { type: String, required: true, trim: true, maxlength: 60 },
+  text: { type: String, required: true, trim: true, maxlength: 300 },
+});
 
 const userSchema = new Schema<UserDoc>(
   {
@@ -19,8 +29,8 @@ const userSchema = new Schema<UserDoc>(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, select: false },
     role: { type: String, enum: ['customer', 'seller'], required: true },
-    phone: { type: String, trim: true },
-    address: { type: String, trim: true },
+    phone: { type: String, required: true, trim: true },
+    addresses: { type: [addressSchema], default: [] },
   },
   { timestamps: { createdAt: true, updatedAt: false } },
 );

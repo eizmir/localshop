@@ -3,7 +3,7 @@
 # Kullanım: ./scripts/db.sh start | stop | status
 set -euo pipefail
 
-MONGOD="/opt/homebrew/opt/mongodb-community@4.2/bin/mongod"
+MONGOD="/opt/homebrew/opt/mongodb-community@8.0/bin/mongod"
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 DBPATH="$ROOT/.data/mongo"
 LOGPATH="$ROOT/.data/mongod.log"

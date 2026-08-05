@@ -3,7 +3,7 @@ import * as orderService from '../services/orderService';
 
 export async function create(req: Request, res: Response, next: NextFunction) {
   try {
-    res.status(201).json(await orderService.createOrder(req.user!.id));
+    res.status(201).json(await orderService.createOrder(req.user!.id, req.body.addressId));
   } catch (err) {
     next(err);
   }
@@ -20,6 +20,20 @@ export async function listMine(req: Request, res: Response, next: NextFunction) 
 export async function getOne(req: Request, res: Response, next: NextFunction) {
   try {
     res.json(await orderService.getOrder(String(req.params.id), req.user!.id));
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function updateStatus(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.json(
+      await orderService.updateOrderStatus(
+        String(req.params.id),
+        req.user!.id,
+        req.body.status,
+      ),
+    );
   } catch (err) {
     next(err);
   }

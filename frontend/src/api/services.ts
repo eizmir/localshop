@@ -1,4 +1,5 @@
 import type {
+  Address,
   AuthResponse,
   Cart,
   Order,
@@ -18,7 +19,7 @@ export const authApi = {
     email: string;
     password: string;
     role: Role;
-    phone?: string;
+    phone: string;
     address?: string;
   }) => api.post<AuthResponse>('/auth/register', input).then((r) => r.data),
   login: (input: { email: string; password: string }) =>
@@ -60,11 +61,21 @@ export const cartApi = {
     api.delete<Cart>(`/cart/items/${productId}`).then((r) => r.data),
 };
 
+export const addressesApi = {
+  list: () => api.get<Address[]>('/addresses').then((r) => r.data),
+  create: (input: { title: string; text: string }) =>
+    api.post<Address>('/addresses', input).then((r) => r.data),
+  remove: (id: string) => api.delete<Address[]>(`/addresses/${id}`).then((r) => r.data),
+};
+
 export const ordersApi = {
-  create: () => api.post<Order>('/orders').then((r) => r.data),
+  create: (addressId: string) =>
+    api.post<Order>('/orders', { addressId }).then((r) => r.data),
   listMine: () => api.get<Order[]>('/orders').then((r) => r.data),
   get: (id: string) => api.get<Order>(`/orders/${id}`).then((r) => r.data),
   listForSeller: () => api.get<SellerOrder[]>('/orders/seller/me').then((r) => r.data),
+  updateStatus: (id: string, status: 'SHIPPED' | 'DELIVERED') =>
+    api.patch<SellerOrder>(`/orders/${id}/status`, { status }).then((r) => r.data),
 };
 
 export const paymentsApi = {

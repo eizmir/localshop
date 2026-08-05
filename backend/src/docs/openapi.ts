@@ -21,6 +21,14 @@ export const openapiSpec = {
     },
     schemas: {
       Error: errorResponse,
+      Address: {
+        type: 'object',
+        properties: {
+          id: { type: 'string' },
+          title: { type: 'string', example: 'Ev' },
+          text: { type: 'string', example: 'Bahçelievler Mah. 12. Sok. No:3, Urla / İzmir' },
+        },
+      },
       User: {
         type: 'object',
         properties: {
@@ -29,7 +37,7 @@ export const openapiSpec = {
           email: { type: 'string' },
           role: { type: 'string', enum: ['customer', 'seller'] },
           phone: { type: 'string' },
-          address: { type: 'string' },
+          addresses: { type: 'array', items: { $ref: '#/components/schemas/Address' } },
           createdAt: { type: 'string', format: 'date-time' },
         },
       },
@@ -116,7 +124,7 @@ export const openapiSpec = {
             'application/json': {
               schema: {
                 type: 'object',
-                required: ['name', 'email', 'password', 'role'],
+                required: ['name', 'email', 'password', 'role', 'phone'],
                 properties: {
                   name: { type: 'string', minLength: 2 },
                   email: { type: 'string', format: 'email' },
@@ -336,17 +344,97 @@ export const openapiSpec = {
         responses: { '200': { description: 'Çıkarıldı' } },
       },
     },
+    '/addresses': {
+      get: {
+        tags: ['Addresses'],
+        summary: 'Adreslerimi listele',
+        security: bearerAuth,
+        responses: {
+          '200': {
+            description: 'Adres listesi',
+            content: {
+              'application/json': {
+                schema: { type: 'array', items: { $ref: '#/components/schemas/Address' } },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ['Addresses'],
+        summary: 'Yeni adres ekle',
+        security: bearerAuth,
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['title', 'text'],
+                properties: {
+                  title: { type: 'string', minLength: 2, maxLength: 60, example: 'Ev' },
+                  text: { type: 'string', minLength: 5, maxLength: 300 },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '201': {
+            description: 'Eklenen adres',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Address' } } },
+          },
+          '400': { description: 'Geçersiz istek' },
+        },
+      },
+    },
+    '/addresses/{id}': {
+      delete: {
+        tags: ['Addresses'],
+        summary: 'Adres sil',
+        security: bearerAuth,
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string' } },
+        ],
+        responses: {
+          '200': {
+            description: 'Kalan adresler',
+            content: {
+              'application/json': {
+                schema: { type: 'array', items: { $ref: '#/components/schemas/Address' } },
+              },
+            },
+          },
+          '404': { description: 'Adres bulunamadı' },
+        },
+      },
+    },
     '/orders': {
       post: {
         tags: ['Orders'],
         summary: 'Sepetten sipariş oluştur (customer) — PENDING_PAYMENT doğar',
         security: bearerAuth,
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['addressId'],
+                properties: {
+                  addressId: { type: 'string', description: 'Teslimat adresinin id değeri' },
+                },
+              },
+            },
+          },
+        },
         responses: {
           '201': {
             description: 'Sipariş',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Order' } } },
           },
           '400': { description: 'Sepet boş / stok yetersiz' },
+          '404': { description: 'Adres bulunamadı' },
         },
       },
       get: {
@@ -354,6 +442,34 @@ export const openapiSpec = {
         summary: 'Sipariş geçmişim (customer)',
         security: bearerAuth,
         responses: { '200': { description: 'Sipariş listesi' } },
+      },
+    },
+    '/orders/{id}/status': {
+      patch: {
+        tags: ['Orders'],
+        summary: 'Sipariş durumunu ilerlet (seller) — PAID→SHIPPED→DELIVERED',
+        security: bearerAuth,
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['status'],
+                properties: {
+                  status: { type: 'string', enum: ['SHIPPED', 'DELIVERED'] },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          '200': { description: 'Güncellenen sipariş (satıcı görünümü)' },
+          '400': { description: 'Geçersiz durum geçişi' },
+          '403': { description: 'Siparişte satıcıya ait ürün yok' },
+          '404': { description: 'Sipariş bulunamadı' },
+        },
       },
     },
     '/orders/{id}': {

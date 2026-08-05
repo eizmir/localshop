@@ -1,25 +1,30 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { errorMessage } from '../api/client';
-import { cartApi, ordersApi } from '../api/services';
+import { addressesApi, cartApi, ordersApi } from '../api/services';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Spinner } from '../components/Spinner';
 import { useCart } from '../context/CartContext';
 import { t } from '../i18n';
-import type { Cart } from '../types';
+import type { Address, Cart } from '../types';
 
 export function CartPage() {
   const navigate = useNavigate();
   const { refresh } = useCart();
   const [cart, setCart] = useState<Cart | null>(null);
+  const [addresses, setAddresses] = useState<Address[]>([]);
+  const [addressId, setAddressId] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    cartApi
-      .get()
-      .then(setCart)
+    Promise.all([cartApi.get(), addressesApi.list()])
+      .then(([loadedCart, loadedAddresses]) => {
+        setCart(loadedCart);
+        setAddresses(loadedAddresses);
+        setAddressId(loadedAddresses[0]?.id ?? '');
+      })
       .catch((err) => setError(errorMessage(err)))
       .finally(() => setLoading(false));
   }, []);
@@ -38,10 +43,11 @@ export function CartPage() {
   }
 
   async function checkout() {
+    if (!addressId) return;
     setError('');
     setBusy(true);
     try {
-      const order = await ordersApi.create();
+      const order = await ordersApi.create(addressId);
       await refresh();
       navigate(`/payment/${order.id}`);
     } catch (err) {
@@ -62,6 +68,40 @@ export function CartPage() {
         </p>
       ) : (
         <>
+          <div className="card address-picker">
+            <h2 className="heading-tight">{t.cart.deliveryAddress}</h2>
+            {addresses.length === 0 ? (
+              <p className="muted">
+                {t.cart.noAddress} <Link to="/settings">{t.cart.manageAddresses}</Link>
+              </p>
+            ) : (
+              <>
+                <ul className="address-list">
+                  {addresses.map((address) => (
+                    <li key={address.id}>
+                      <label className="address-option">
+                        <input
+                          type="radio"
+                          name="deliveryAddress"
+                          value={address.id}
+                          checked={addressId === address.id}
+                          onChange={() => setAddressId(address.id)}
+                          disabled={busy}
+                        />
+                        <span>
+                          <strong>{address.title}</strong>
+                          <span className="muted"> — {address.text}</span>
+                        </span>
+                      </label>
+                    </li>
+                  ))}
+                </ul>
+                <Link className="muted" to="/settings">
+                  {t.cart.manageAddresses}
+                </Link>
+              </>
+            )}
+          </div>
           <table className="table">
             <thead>
               <tr>
@@ -112,7 +152,7 @@ export function CartPage() {
             <strong className="total-lg">
               {t.cart.total(cart.totalPrice.toLocaleString('tr-TR'))}
             </strong>
-            <button className="btn btn-primary" onClick={checkout} disabled={busy}>
+            <button className="btn btn-primary" onClick={checkout} disabled={busy || !addressId}>
               {busy ? t.cart.processing : t.cart.checkout}
             </button>
           </div>

@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { errorMessage } from '../api/client';
+import { assetUrl, errorMessage } from '../api/client';
 import { ordersApi, productsApi } from '../api/services';
 import { ErrorMessage } from '../components/ErrorMessage';
 import { Spinner } from '../components/Spinner';
+import { useToast } from '../context/ToastContext';
 import { t } from '../i18n';
 import type { Product, SellerOrder } from '../types';
 import { StatusPill } from './Orders';
 
 export function SellerDashboard() {
+  const toast = useToast();
   const [products, setProducts] = useState<Product[] | null>(null);
   const [orders, setOrders] = useState<SellerOrder[] | null>(null);
   const [error, setError] = useState('');
@@ -52,6 +54,20 @@ export function SellerDashboard() {
     }
   }
 
+  async function advanceStatus(orderId: string, status: 'SHIPPED' | 'DELIVERED') {
+    setError('');
+    setBusy(true);
+    try {
+      const updated = await ordersApi.updateStatus(orderId, status);
+      setOrders((prev) => prev?.map((o) => (o.id === updated.id ? updated : o)) ?? null);
+      toast.show(t.seller.statusUpdated);
+    } catch (err) {
+      setError(errorMessage(err));
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (loading) return <Spinner />;
 
   return (
@@ -71,6 +87,7 @@ export function SellerDashboard() {
         <table className="table">
           <thead>
             <tr>
+              <th>{t.seller.colImage}</th>
               <th>{t.seller.colProduct}</th>
               <th>{t.seller.colCategory}</th>
               <th>{t.seller.colPrice}</th>
@@ -81,6 +98,15 @@ export function SellerDashboard() {
           <tbody>
             {products.map((p) => (
               <tr key={p.id}>
+                <td>
+                  <Link to={`/products/${p.id}`} className="product-thumb">
+                    {p.imageUrl ? (
+                      <img src={assetUrl(p.imageUrl)} alt={p.name} loading="lazy" />
+                    ) : (
+                      <span className="product-image-placeholder">🛍</span>
+                    )}
+                  </Link>
+                </td>
                 <td>
                   <Link to={`/products/${p.id}`}>{p.name}</Link>
                 </td>
@@ -103,13 +129,23 @@ export function SellerDashboard() {
                   />
                 </td>
                 <td>
-                  <button
-                    className="btn btn-ghost btn-sm text-danger"
-                    disabled={busy}
-                    onClick={() => void removeProduct(p.id, p.name)}
-                  >
-                    {t.seller.delete}
-                  </button>
+                  <div className="row-actions">
+                    <Link
+                      to={`/seller/products/${p.id}/edit`}
+                      className="btn btn-ghost btn-sm icon-btn"
+                      title={t.seller.edit}
+                      aria-label={t.seller.editOf(p.name)}
+                    >
+                      ✏️
+                    </Link>
+                    <button
+                      className="btn btn-ghost btn-sm text-danger"
+                      disabled={busy}
+                      onClick={() => void removeProduct(p.id, p.name)}
+                    >
+                      {t.seller.delete}
+                    </button>
+                  </div>
                 </td>
               </tr>
             ))}
@@ -138,7 +174,32 @@ export function SellerDashboard() {
                   </li>
                 ))}
               </ul>
-              <strong>{t.seller.sellerShare(order.sellerTotal.toLocaleString('tr-TR'))}</strong>
+              {order.address && (
+                <p className="muted">
+                  {t.seller.deliveryTo(order.address.title, order.address.text)}
+                </p>
+              )}
+              <div className="row spread">
+                <strong>{t.seller.sellerShare(order.sellerTotal.toLocaleString('tr-TR'))}</strong>
+                {order.status === 'PAID' && (
+                  <button
+                    className="btn btn-primary btn-sm"
+                    disabled={busy}
+                    onClick={() => void advanceStatus(order.id, 'SHIPPED')}
+                  >
+                    {t.seller.markShipped}
+                  </button>
+                )}
+                {order.status === 'SHIPPED' && (
+                  <button
+                    className="btn btn-primary btn-sm"
+                    disabled={busy}
+                    onClick={() => void advanceStatus(order.id, 'DELIVERED')}
+                  >
+                    {t.seller.markDelivered}
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>
