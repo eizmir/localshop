@@ -88,6 +88,46 @@ npm run dev                 # http://localhost:5173
 - API dokümantasyonu: http://localhost:4000/api-docs
 - Health check: http://localhost:4000/api/health
 
+## Testler
+
+Her iki projede de [Vitest](https://vitest.dev) kullanılır. Testler veritabanı veya ayakta
+bir sunucu gerektirmez; harici bağımlılıklar (Mongoose modelleri, API servisleri) mock'lanır,
+bu sayede tüm takım saniyeler içinde koşar.
+
+```bash
+cd backend  && npm test      # 73 test
+cd frontend && npm test      # 62 test
+
+npm run test:watch           # geliştirirken izleme modu
+```
+
+**Backend (73 test)**
+
+| Dosya | Kapsam |
+|---|---|
+| `services/fakePay.test.ts` | Test kartları, Luhn doğrulaması, son kullanma tarihi, benzersiz `transactionId` |
+| `services/orderService.test.ts` | `PAID → SHIPPED → DELIVERED` geçiş kuralları, satıcı sahipliği, satıcıya göre kalem daraltma |
+| `services/authService.test.ts` | Şifrenin response'a sızmaması, adres serileştirme, kayıttaki tekil adresin listeye dönüşmesi |
+| `middleware/auth.test.ts` | Token doğrulama (eksik/bozuk/süresi dolmuş/yabancı imza), rol kontrolü |
+| `middleware/validate.test.ts` | Şema hatalarının alan bazlı dönmesi, `req.body`'nin parse edilmiş veriyle değişmesi |
+| `middleware/errorHandler.test.ts` | `ApiError` eşlemesi, beklenmeyen hatada iç detayın sızmaması |
+| `validators/*.test.ts` | Kayıt (telefon zorunlu, adres opsiyonel), adres ve sipariş şemaları |
+
+**Frontend (62 test)**
+
+| Dosya | Kapsam |
+|---|---|
+| `components/ProductCard.test.tsx` | Sepete ekle / adet kontrolü geçişi, stok sınırı, tükendi durumu, satıcı görünümü, misafirin girişe yönlenmesi |
+| `pages/Register.test.tsx` | Şifre tekrarı uyuşmazlığı, hesap türüne göre "Firma Adı", zorunlu alanlar |
+| `pages/Settings.test.tsx` | Adres listeleme, ekleme, silme ve hata durumları |
+| `pages/SellerDashboard.test.tsx` | Ürün fotoğrafı ve düzenle bağlantısı, siparişin teslimat adresi, durum ilerletme butonları |
+| `context/CartContext.test.tsx` | Adet hesabı, `quantityOf`, adet 0'da ürünün kaldırılması, hata durumunda boş sepet |
+| `context/ToastContext.test.tsx` | Bildirimin gösterilmesi, 2,5 sn sonra kaybolması, yığılma |
+| `api/client.test.ts` | Sunucu hata mesajının öne çıkması, 429 metni, token saklama |
+
+Backend'de test dosyaları `tsconfig.build.json` ile derleme çıktısının dışında tutulur;
+`npx tsc --noEmit` ise testleri de tip kontrolünden geçirir.
+
 ## Fake Payment (FakePay)
 
 Gerçek ödeme altyapısı yoktur; ödeme simüle edilir.
