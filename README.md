@@ -1,8 +1,13 @@
 # 🛍 LocalShop
 
-![LocalShop ürün listesi](docs/demo.MOV)
-
 Yerel üreticilerin ürünlerini doğrudan müşterilere satabileceği online marketplace MVP'si.
+
+## Demo
+
+Satıcı kayıt olur ve ürün ekler → müşteri kayıt olup sipariş verir ve öder → satıcı siparişi
+teslimat adresiyle görüp kargoya verir.
+
+https://github.com/user-attachments/assets/a2e1d868-e6f8-4b83-8de7-38c87c112f04
 
 ## Kullanılan Teknolojiler
 
