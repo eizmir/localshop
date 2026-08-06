@@ -1,6 +1,6 @@
 # 🛍 LocalShop
 
-![LocalShop ürün listesi](docs/images/urun-listesi.png)
+![LocalShop ürün listesi](docs/demo.MOV)
 
 Yerel üreticilerin ürünlerini doğrudan müşterilere satabileceği online marketplace MVP'si.
 
